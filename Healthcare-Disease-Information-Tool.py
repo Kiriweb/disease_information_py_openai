@@ -1,11 +1,16 @@
 import streamlit as st
-import openai as client  # Alias openai as client
+import openai  # Correct import of openai package
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # Set your OpenAI API key
-client.api_key = st.secrets["OPENAI_API_KEY"]
+if "OPENAI_API_KEY" not in st.secrets:
+    st.error("Missing OpenAI API Key. Please add it to .streamlit/secrets.toml or via the Streamlit Cloud Secrets UI.")
+    st.stop()
+
+# Set the OpenAI API key properly
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def get_disease_info(disease_name, year):
     """
@@ -19,7 +24,7 @@ def get_disease_info(disease_name, year):
     ]
     "dosage":""'''
     try:
-        response = client.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"Please provide information on the following aspects for {disease_name} in the year {year}: 1. Key Statistics, 2. Recovery Options, 3. Recommended Medications. Format the response in JSON with keys for 'name', 'statistics', 'total_cases' (this always has to be a number), 'recovery_rate' (this always has to be a percentage), 'mortality_rate' (this always has to be a percentage) 'recovery_options', (explain each recovery option in detail), and 'medication', (give some side effect examples and dosages) always use this json format for medication : {medication_format} ."}
