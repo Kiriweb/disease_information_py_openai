@@ -1,6 +1,6 @@
 import streamlit as st
 import openai  # Correct import of the OpenAI package
-from openai.error import OpenAIError  # Import OpenAIError correctly
+from openai import OpenAIError  # Import OpenAIError correctly
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
