@@ -32,9 +32,15 @@ def get_disease_info(disease_name, year):
             ]
         )
         return response['choices'][0]['message']['content']
-    except (json.JSONDecodeError, OpenAIError) as e:
-        st.error(f"Failed to decode the response or encountered an OpenAI API error. Details: {e}")
-        return None
+    except OpenAIError as e:
+        st.error(f"OpenAI API Error: {e}")
+        st.stop()
+    except json.JSONDecodeError as e:
+        st.error(f"JSON Decode Error: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Unexpected Error: {e}")
+        st.stop()
 
 def display_disease_info(disease_info):
     """
