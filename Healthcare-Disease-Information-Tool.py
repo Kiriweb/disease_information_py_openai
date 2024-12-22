@@ -24,14 +24,15 @@ def get_disease_info(disease_name, year):
     ]
     "dosage":""'''
     try:
-        response = openai.chat.completions.create(
+        # Correct API usage
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Please provide information on the following aspects for {disease_name} in the year {year}: 1. Key Statistics, 2. Recovery Options, 3. Recommended Medications. Format the response in JSON with keys for 'name', 'statistics', 'total_cases' (this always has to be a number), 'recovery_rate' (this always has to be a percentage), 'mortality_rate' (this always has to be a percentage), 'recovery_options' (explain each recovery option in detail), and 'medication' (give some side effect examples and dosages) always use this JSON format for medication: {medication_format}."}
             ]
         )
-        return response['choices'][0]['message']['content']
+        return response.choices[0].message.content  # Correctly access response data
     except OpenAIError as e:
         st.error(f"OpenAI API Error: {e}")
         st.stop()
