@@ -1,32 +1,30 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Set your OpenAI API key
-if "OPENAI_API_KEY" not in st.secrets:
-    st.error("Missing OpenAI API Key. Please add it to .streamlit/secrets.toml or via the Streamlit Cloud Secrets UI.")
-    st.stop()
-
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Set your OpenAI API key here
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def get_disease_info(disease_name, year):
     """
     Function to query OpenAI and return structured information about a disease.
     """
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # Using GPT-4
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Please provide information on {disease_name} for the year {year}. Include key statistics, recovery options, and recommended medications in JSON format."}
-            ]
-        )
-        return response.choices[0].message.content
-    except openai.error.OpenAIError as e:
-        st.error(f"OpenAI API Error: {e}")
-        st.stop()
+    medication_format = '''"name":""
+    "side_effects":[
+    0:""
+    1:""
+    ...
+    ]
+    "dosage":""'''
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": f"Please provide information on the following aspects for {disease_name} in the year {year}: 1. Key Statistics, 2. Recovery Options, 3. Recommended Medications. Format the response in JSON with keys for 'name', 'statistics', 'total_cases' (this always has to be a number), 'recovery_rate' (this always has to be a percentage), 'mortality_rate' (this always has to be a percentage) 'recovery_options', (explain each recovery option in detail), and 'medication', (give some side effect examples and dosages) always use this json format for medication : {medication_format} ."}
+        ]
+    )
+    return response.choices[0].message.content
 
 def display_disease_info(disease_info):
     """
@@ -41,25 +39,29 @@ def display_disease_info(disease_info):
         # Pie chart to display Recovery and Mortality Rates
         labels = ['Recovery Rate', 'Mortality Rate']
         sizes = [recovery_rate, mortality_rate]
+        colors = ['#4CAF50', '#FF6347']
         fig, ax = plt.subplots()
-        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
-        ax.axis('equal')
-
+        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=colors)
+        ax.axis('equal')  # Equal aspect ratio ensures that the pie chart is circular.
+        
         st.write(f"## Statistics for {info['name']}")
-        st.pyplot(fig)
+        st.pyplot(fig)  # Display the pie chart
 
         st.write("## Recovery Options")
-        for option, description in info['recovery_options'].items():
+        recovery_options = info['recovery_options']
+        for option, description in recovery_options.items():
             st.subheader(option)
             st.write(description)
-
+            
         st.write("## Medication")
-        for medication in info['medication']:
-            st.subheader(medication['name'])
-            st.write(f"Side Effects: {', '.join(medication['side_effects'])}")
-            st.write(f"Dosage: {medication['dosage']}")
+        medication = info['medication']
+        medication_count = 1
+        for option, description in medication.items():
+            st.subheader(f"{medication_count}. {option}")
+            st.write(description)
+            medication_count += 1
     except json.JSONDecodeError:
-        st.error("Failed to decode the response into JSON.")
+        st.error("Failed to decode the response into JSON. Please check the format of the OpenAI response.")
 
 # Streamlit app title
 st.title("Disease Information Dashboard")
