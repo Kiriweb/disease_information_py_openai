@@ -1,6 +1,5 @@
 import streamlit as st
 import openai
-from openai import OpenAIError
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,31 +15,17 @@ def get_disease_info(disease_name, year):
     """
     Function to query OpenAI and return structured information about a disease.
     """
-    medication_format = '''"name":""
-    "side_effects":[
-    0:""
-    1:""
-    ...
-    ]
-    "dosage":""'''
     try:
-        # Updated to use GPT-4 model
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # Changed model to gpt-4
+            model="gpt-4",  # Using GPT-4
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Please provide information on the following aspects for {disease_name} in the year {year}: 1. Key Statistics, 2. Recovery Options, 3. Recommended Medications. Format the response in JSON with keys for 'name', 'statistics', 'total_cases' (this always has to be a number), 'recovery_rate' (this always has to be a percentage), 'mortality_rate' (this always has to be a percentage), 'recovery_options' (explain each recovery option in detail), and 'medication' (give some side effect examples and dosages) always use this JSON format for medication: {medication_format}."}
+                {"role": "user", "content": f"Please provide information on {disease_name} for the year {year}. Include key statistics, recovery options, and recommended medications in JSON format."}
             ]
         )
-        return response.choices[0].message.content  # Correctly access response data
-    except OpenAIError as e:
+        return response.choices[0].message.content
+    except openai.error.OpenAIError as e:
         st.error(f"OpenAI API Error: {e}")
-        st.stop()
-    except json.JSONDecodeError as e:
-        st.error(f"JSON Decode Error: {e}")
-        st.stop()
-    except Exception as e:
-        st.error(f"Unexpected Error: {e}")
         st.stop()
 
 def display_disease_info(disease_info):
@@ -56,29 +41,25 @@ def display_disease_info(disease_info):
         # Pie chart to display Recovery and Mortality Rates
         labels = ['Recovery Rate', 'Mortality Rate']
         sizes = [recovery_rate, mortality_rate]
-        colors = ['#4CAF50', '#FF6347']
         fig, ax = plt.subplots()
-        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=colors)
+        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
         ax.axis('equal')
-        
+
         st.write(f"## Statistics for {info['name']}")
         st.pyplot(fig)
 
         st.write("## Recovery Options")
-        recovery_options = info['recovery_options']
-        for option, description in recovery_options.items():
+        for option, description in info['recovery_options'].items():
             st.subheader(option)
             st.write(description)
-            
+
         st.write("## Medication")
-        medication = info['medication']
-        medication_count = 1
-        for option, description in medication.items():
-            st.subheader(f"{medication_count}. {option}")
-            st.write(description)
-            medication_count += 1
+        for medication in info['medication']:
+            st.subheader(medication['name'])
+            st.write(f"Side Effects: {', '.join(medication['side_effects'])}")
+            st.write(f"Dosage: {medication['dosage']}")
     except json.JSONDecodeError:
-        st.error("Failed to decode the response into JSON. Please check the format of the OpenAI response.")
+        st.error("Failed to decode the response into JSON.")
 
 # Streamlit app title
 st.title("Disease Information Dashboard")
