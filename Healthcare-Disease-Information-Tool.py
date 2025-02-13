@@ -39,7 +39,7 @@ def get_disease_info(disease_name, year):
     "dosage":""'''
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Please provide information on the following aspects for {disease_name} in the year {year}: 1. Key Statistics, 2. Recovery Options, 3. Recommended Medications. Format the response in JSON with keys for 'name', 'statistics', 'total_cases' (this always has to be a number), 'recovery_rate' (this always has to be a percentage), 'mortality_rate' (this always has to be a percentage), 'recovery_options' (explain each recovery option in detail), and 'medication' (give some side effect examples and dosages). Always use this JSON format for medication: {medication_format}. Ensure the response is valid JSON and do not include any additional text before or after the JSON object."}
