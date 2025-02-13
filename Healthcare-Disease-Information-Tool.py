@@ -30,31 +30,25 @@ def get_disease_info(disease_name, year):
     """
     Function to query OpenAI and return structured information about a disease.
     """
-    medication_format = '''"name":""
-    "side_effects":[
-    0:""
-    1:""
-    ...
-    ]
-    "dosage":""'''
+    medication_format = '''{
+        "name": "",
+        "side_effects": [
+            "",
+            ""
+        ],
+        "dosage": ""
+    }'''
+
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o",  # Updated model from gpt-3.5-turbo to gpt-4o
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"""
-Please provide information about {disease_name} in {year} in a structured JSON format with these keys:
-- "name" (string)
-- "statistics" (dictionary) containing:
-    - "total_cases" (integer)
-    - "recovery_rate" (string ending with '%')
-    - "mortality_rate" (string ending with '%')
-- "recovery_options" (dictionary with recovery methods)
-- "medication" (dictionary listing medication details)
+                {"role": "system", "content": "You are a helpful medical assistant."},
+                {"role": "user", "content": f'''
+Please provide structured JSON data for the disease "{disease_name}" in the year {year}. Use the following format:
 
-Ensure the response is **valid JSON** without additional text. Example format:
 {{
-  "name": "Disease Name",
+  "name": "{disease_name}",
   "statistics": {{
     "total_cases": 100000,
     "recovery_rate": "85%",
@@ -65,15 +59,18 @@ Ensure the response is **valid JSON** without additional text. Example format:
     "Option 2": "Description"
   }},
   "medication": {{
-    "Medicine A": "Side effects and dosage",
-    "Medicine B": "Side effects and dosage"
+    "Medicine A": {medication_format},
+    "Medicine B": {medication_format}
   }}
 }}
-"""}}
 
+Ensure the response is **valid JSON** without any additional text or explanations.
+'''}
             ]
         )
+
         response_content = response.choices[0].message.content.strip()
+        st.write("Debugging raw API response:", response_content)  # Debugging output
 
         # Clean and extract JSON if needed
         if not response_content.startswith("{") or not response_content.endswith("}"):
@@ -81,12 +78,14 @@ Ensure the response is **valid JSON** without additional text. Example format:
 
         # Parse and return JSON
         return json.loads(response_content)
+
     except json.JSONDecodeError:
         st.error("Failed to decode the response into JSON. Please check the format of the OpenAI response.")
         return None
     except Exception as e:
         st.error(f"OpenAI API Error: {e}")
         return None
+
 
 def display_disease_info(disease_info):
     """
