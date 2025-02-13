@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PyPDF2 import PdfReader
 
-@st.cache
+@st.cache_data
 def load_diseases_from_pdf(pdf_path):
     """
     Load a list of diseases from a PDF file.
