@@ -70,7 +70,7 @@ Ensure the response is **valid JSON** without any additional text or explanation
         )
 
         response_content = response.choices[0].message.content.strip()
-        st.write("Debugging raw API response:", response_content)  # Debugging output
+        # st.write("Debugging raw API response:", response_content)  # Debugging output
 
         # Clean and extract JSON if needed
         if not response_content.startswith("{") or not response_content.endswith("}"):
